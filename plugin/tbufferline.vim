@@ -1,36 +1,80 @@
 " TODO: proper plugin. This probably just means better comments for the scary
 "       stuff.
-"       Oh, and docs.
-"       This should export an off/on option which should disable the
-"       autocommand, a command for turning it off and on, and the <Plug>
-"       mappings
-"       Rename it?
-" TODO: should bufnummap be exported as a function?
+"       Oh, and docs. Maybe some screengrabs. Should probably check for
+"       neovim.
 
-augroup buffer_line
-  autocmd!
+if exists('g:loaded_tbufferline')
+  finish
+endif
+let g:loaded_tbufferline = 1
+let s:tbufferline_enabled = 0
 
-  " TODO: Do we need bufwinenter? Is this a bug in setlocal statusline?
-  autocmd WinEnter,VimEnter,BufWinEnter *
-      \ execute 'setlocal statusline=' . tbufferline#StatusLine(winnr())
-augroup END
+" Enabling and disabling
+
+function! s:Enable() abort
+  augroup tbufferline
+    autocmd!
+
+    " TODO: Do we need bufwinenter? Is this a bug in setlocal statusline?
+    autocmd WinEnter,VimEnter,BufWinEnter *
+        \ call setwinvar(winnr(), '&statusline',
+        \     tbufferline#StatusLine(winnr()))
+  augroup END
+  let i = 1
+  let last_window = winnr('$')
+  while i <= last_window
+    call setwinvar(i, '&statusline', tbufferline#StatusLine(i))
+    let i += 1
+  endwhile
+  let s:tbufferline_enabled = 1
+endfunction
+
+function! s:Disable() abort
+  augroup tbufferline
+    autocmd!
+  augroup END
+  let s:tbufferline_enabled = 0
+  let i = 1
+  let last_window = winnr('$')
+  while i <= last_window
+    call setwinvar(i, '&statusline', '')
+    let i += 1
+  endwhile
+endfunction
+
+function! s:Toggle() abort
+  if s:tbufferline_enabled
+    call s:Disable()
+  else
+    call s:Enable()
+  endif
+endfunction
+
+if exists('g:tbufferline_enable_on_startup') && g:tbufferline_enable_on_startup
+  call s:Enable()
+endif
+
+" Commands
+
+command TbufferlineEnable call s:Enable()
+command TbufferlineDisable call s:Disable()
+command TbufferlineToggle call s:Toggle()
 
 " Mappings and mapping-related functions
 
-" TODO: can we put these in autoload and still have them script-local?
 function! s:SwitchBuffer(buffer_command) abort
-  if v:count && v:count <= len(g:tbufferline#bufnummap)
-    execute a:buffer_command . ' ' . g:tbufferline#bufnummap[v:count-1]
+  if v:count && v:count <= len(tbufferline#BufNumMap())
+    execute a:buffer_command . ' ' . tbufferline#BufNumMap()[v:count-1]
   endif
 endfunction
 
 function! s:StepBuffer(multiplier) abort
   let steps = (v:count ? v:count : 1) * a:multiplier
-  let idx = (index(g:tbufferline#bufnummap, bufnr('%')) + steps)
+  let idx = (index(tbufferline#BufNumMap(), bufnr('%')) + steps)
   execute 'buffer '
-      \ . g:tbufferline#bufnummap[idx % len(g:tbufferline#bufnummap)]
+      \ . tbufferline#BufNumMap()[idx % len(tbufferline#BufNumMap())]
 endfunction
- 
+
 nnoremap <silent> <Plug>TbufferlineBuffer
     \ :<C-u>call <SID>SwitchBuffer('buffer')<CR>
 nnoremap <silent> <Plug>TbufferlineSplitBuffer

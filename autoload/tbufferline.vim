@@ -1,3 +1,4 @@
+" Get the data necessary for the statusline below a:window
 function! s:GetBufferData(window) abort
   let shell_buffers = []
   let file_buffers = []
@@ -27,6 +28,7 @@ function! s:GetBufferData(window) abort
   return [shell_buffers, file_buffers, current_buffer, alternate_buffer]
 endfunction
 
+" Make a statusline entry for a shell buffer
 function! s:MakeShellName(index, shell_data, current_buffer, alternate_buffer)
     \ abort
   let [bufnum, cwd] = a:shell_data
@@ -39,6 +41,7 @@ function! s:MakeShellName(index, shell_data, current_buffer, alternate_buffer)
   return line
 endfunction
 
+" Make a statusline entry for a file buffer
 function! s:MakeFileName(index, file_data, current_buffer, alternate_buffer)
     \ abort
   let [bufnum, modified, fname] = a:file_data
@@ -81,13 +84,13 @@ function! s:UpdateVarsIfNecessary(window) abort
 endfunction
 
 " Convenience function for returning new status line and updating
-" g:tbufferline#bufnummap
+" s:bufnummap
 function! tbufferline#Update(window) abort
   call s:UpdateVarsIfNecessary(a:window)
   let [shell_buffers, file_buffers, current_buffer, alternate_buffer]
       \ = s:GetBufferData(a:window)
   call setwinvar(a:window, 'alternate_buffer', alternate_buffer)
-  let g:tbufferline#bufnummap
+  let s:bufnummap
       \ = map(file_buffers + shell_buffers, 'v:val[0]')
   return s:MakeStatusLine(shell_buffers, file_buffers, current_buffer,
       \ alternate_buffer)
@@ -95,4 +98,8 @@ endfunction
 
 function! tbufferline#StatusLine(window) abort
   return '%!tbufferline#Update(' . a:window . ')'
+endfunction
+
+function! tbufferline#BufNumMap() abort
+  return s:bufnummap
 endfunction
