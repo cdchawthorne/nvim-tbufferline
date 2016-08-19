@@ -28,9 +28,9 @@ Enabling and disabling                           *tbufferline-enabling-disabling
 
 tbufferline is disabled by default. The following commands are available:
 
-:TbufferlineEnable
-:TbufferlineDisable
-:TbufferlineToggle
+:TbufferlineEnable~
+:TbufferlineDisable~
+:TbufferlineToggle~
 
 Their function should be self-explanatory; the only thing worth mentioning is
 that all statuslines are reset to their default value when tbufferline is
