@@ -67,7 +67,13 @@ function! s:MakeStatusLine(shell_buffers, file_buffers, current_buffer,
       \ . join(shell_names, '  ')
 endfunction
 
-" This is frightening on *so* many levels...
+" If the user moves the windows around, the statuslines move with the windows,
+" but the window numbers don't. Hence sometimes we end up in a bad state; not
+" much for it but to reset all the windows' statuslines.
+" (It's important to reset the other windows now rather than wait for this
+" function to be called on them as this function only gets called on the
+" currently focused window; the statusline on inactive windows would remain
+" out-of-date until they were focused.)
 function! s:UpdateVarsIfNecessary(window) abort
   if getwinvar(a:window, '&statusline') ==# tbufferline#StatusLine(a:window)
     return
@@ -96,6 +102,10 @@ function! tbufferline#Update(window) abort
       \ alternate_buffer)
 endfunction
 
+" Unfortunately, we actually need to put the window in this string. Ideally,
+" tbufferline#Update would fetch the window number; unfortunately, winnr()
+" returns the currently focused window, whereas we want the number of the
+" window we're trying to write a statusline for.
 function! tbufferline#StatusLine(window) abort
   return '%!tbufferline#Update(' . a:window . ')'
 endfunction

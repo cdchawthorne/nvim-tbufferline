@@ -1,0 +1,81 @@
+*tbufferline.txt*
+
+===============================================================================
+CONTENTS                                                   *tbufferline-contents*
+
+    1. Introduction........................... |tbufferline-intro|
+    2. Usage.................................. |tbufferline-usage|
+         Enabling and disabling............... |tbufferline-enabling-disabling|
+         Mappings............................. |tbufferline-mappings|
+         Functions............................ |tbufferline-functions|
+    3. License................................ |tbufferline-license|
+    4. Credits................................ |tbufferline-credits|
+
+
+===============================================================================
+1. Introduction                                               *tbufferline-intro*
+
+tbufferline sets up a status line that displays the currently open buffers.
+File buffers are displayed on the left, terminal buffers on the right.
+Displayed buffers are prefixed with consecutively increasing numbers that can
+be used to target them using the <Plug> mappings; see |tbufferline-mappings|.
+
+===============================================================================
+2. Usage                                                      *tbufferline-usage*
+
+-------------------------------------------------------------------------------
+Enabling and disabling                           *tbufferline-enabling-disabling*
+
+tbufferline is disabled by default. The following commands are available:
+
+:TbufferlineEnable
+:TbufferlineDisable
+:TbufferlineToggle
+
+Their function should be self-explanatory; the only thing worth mentioning is
+that all statuslines are reset to their default value when tbufferline is
+disabled.
+
+To activate tbufferline on startup, set g:tbufferline_enable_on_startup to 1
+in init.vim.
+>
+      let g:tbufferline_enable_on_startup = 1
+<
+
+-------------------------------------------------------------------------------
+Mappings                                                   *tbufferline-mappings*
+
+tbufferline provides several convenience mappings to take advantage of the
+consecutive numbering on the statusline. They can be used as follows:
+>
+  nmap ? <Plug>TbufferlineBuffer
+<
+Available mappings are:
+
+  -----------------------------------------------------------------------------
+  <Plug>TbufferlineBuffer         | When preceded by a count, switch to the
+                                  | corresponding buffer in tbufferline's
+                                  | numbering
+  <Plug>TbufferlineSplitBuffer    | Likewise, but open in a split
+  <Plug>TbufferlineVSplitBuffer   | Likewise, but open in a vertical split
+  <Plug>TbufferlineStepForward    | Switch to the buffer following the current
+                                  | one in tbufferline's numbering
+  <Plug>TbufferlineStepBack       | Likewise, but the preceding buffer
+
+-------------------------------------------------------------------------------
+Functions                                                 *tbufferline-functions*
+
+tbufferline#BufNumMap()~
+  Returns a list whose ith entry is the buffer number (using vim's buffer
+  numbering) of the (i+1)th buffer displayed in the current statusline. This
+  can be used to implement things like the <Plug> mappings above.
+
+===============================================================================
+3. License                                                  *tbufferline-license*
+
+MIT license.
+
+===============================================================================
+4. Credits                                                  *tbufferline-credits*
+
+Inspired by, and originally a fork of, bling's vim-bufferline.

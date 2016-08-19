@@ -1,8 +1,3 @@
-" TODO: proper plugin. This probably just means better comments for the scary
-"       stuff.
-"       Oh, and docs. Maybe some screengrabs. Should probably check for
-"       neovim.
-
 if exists('g:loaded_tbufferline')
   finish
 endif
