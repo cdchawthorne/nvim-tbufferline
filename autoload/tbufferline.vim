@@ -75,22 +75,19 @@ endfunction
 " currently focused window; the statusline on inactive windows would remain
 " out-of-date until they were focused.)
 function! s:UpdateVarsIfNecessary(window) abort
+  " TODO: should this check all windows? Will the window layout ever change
+  "       without affecting the currently focused window?
   if getwinvar(a:window, '&statusline') ==# tbufferline#StatusLine(a:window)
     return
   endif
   " Well, something got confused
   " Update EVERYTHING
-  let i = 1
-  let last_window = winnr('$')
-  while i <= last_window
+  for i in range(1, winnr('$'))
     call setwinvar(i, '&statusline', tbufferline#StatusLine(i))
-    let i += 1
-  endwhile
-  return
+  endfor
 endfunction
 
-" Convenience function for returning new status line and updating
-" s:bufnummap
+" Convenience function for returning new status line and updating s:bufnummap
 function! tbufferline#Update(window) abort
   call s:UpdateVarsIfNecessary(a:window)
   let [shell_buffers, file_buffers, current_buffer, alternate_buffer]

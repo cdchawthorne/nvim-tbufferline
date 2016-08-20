@@ -10,17 +10,15 @@ function! s:Enable() abort
   augroup tbufferline
     autocmd!
 
-    " TODO: Do we need bufwinenter? Is this a bug in setlocal statusline?
+    " TODO: Why do we need BufWinEnter?
+    "       It seems to be behaving like a buffer-local variable.
     autocmd WinEnter,VimEnter,BufWinEnter *
         \ call setwinvar(winnr(), '&statusline',
         \     tbufferline#StatusLine(winnr()))
   augroup END
-  let i = 1
-  let last_window = winnr('$')
-  while i <= last_window
+  for i in range(1, winnr('$'))
     call setwinvar(i, '&statusline', tbufferline#StatusLine(i))
-    let i += 1
-  endwhile
+  endfor
   let s:tbufferline_enabled = 1
 endfunction
 
@@ -29,12 +27,9 @@ function! s:Disable() abort
     autocmd!
   augroup END
   let s:tbufferline_enabled = 0
-  let i = 1
-  let last_window = winnr('$')
-  while i <= last_window
+  for i in range(1, winnr('$'))
     call setwinvar(i, '&statusline', '')
-    let i += 1
-  endwhile
+  endfor
 endfunction
 
 function! s:Toggle() abort
