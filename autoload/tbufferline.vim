@@ -67,29 +67,17 @@ function! s:MakeStatusLine(shell_buffers, file_buffers, current_buffer,
       \ . join(shell_names, '  ')
 endfunction
 
-" If the user moves the windows around, the statuslines move with the windows,
-" but the window numbers don't. Hence sometimes we end up in a bad state; not
-" much for it but to reset all the windows' statuslines.
-" (It's important to reset the other windows now rather than wait for this
-" function to be called on them as this function only gets called on the
-" currently focused window; the statusline on inactive windows would remain
-" out-of-date until they were focused.)
-function! s:UpdateVarsIfNecessary(window) abort
-  " TODO: should this check all windows? Will the window layout ever change
-  "       without affecting the currently focused window?
-  if getwinvar(a:window, '&statusline') ==# tbufferline#StatusLine(a:window)
-    return
-  endif
-  " Well, something got confused
-  " Update EVERYTHING
+" Make sure all the window numbers are up-to-date; see comments in
+" plugin/tbufferline.vim
+function! tbufferline#UpdateStatuslineOptions() abort
   for i in range(1, winnr('$'))
-    call setwinvar(i, '&statusline', tbufferline#StatusLine(i))
+    call setwinvar(i, '&statusline', s:StatusLineOption(i))
   endfor
 endfunction
 
-" Convenience function for returning new status line and updating s:bufnummap
-function! tbufferline#Update(window) abort
-  call s:UpdateVarsIfNecessary(a:window)
+" Return the content to be displayed in the statusline below a:window
+function! tbufferline#StatusLineContent(window) abort
+  call tbufferline#UpdateStatuslineOptions()
   let [shell_buffers, file_buffers, current_buffer, alternate_buffer]
       \ = s:GetBufferData(a:window)
   call setwinvar(a:window, 'alternate_buffer', alternate_buffer)
@@ -99,12 +87,9 @@ function! tbufferline#Update(window) abort
       \ alternate_buffer)
 endfunction
 
-" Unfortunately, we actually need to put the window in this string. Ideally,
-" tbufferline#Update would fetch the window number; unfortunately, winnr()
-" returns the currently focused window, whereas we want the number of the
-" window we're trying to write a statusline for.
-function! tbufferline#StatusLine(window) abort
-  return '%!tbufferline#Update(' . a:window . ')'
+" The string to be stored in the statusline option
+function! s:StatusLineOption(window) abort
+  return '%!tbufferline#StatusLineContent(' . a:window . ')'
 endfunction
 
 function! tbufferline#BufNumMap() abort

@@ -1,3 +1,4 @@
+" TODO: different colours for modes?
 if exists('g:loaded_tbufferline')
   finish
 endif
@@ -10,15 +11,30 @@ function! s:Enable() abort
   augroup tbufferline
     autocmd!
 
+    " The main difficulty implementing this plugin is that when we have
+    " multiple windows open, we want a correct statusline below each window;
+    " unfortunately, for statuslines returned by a function (via %! in the
+    " statusline option), there appears to be no way to detect which window
+    " the statusline corresponds to. The current solution is to include the
+    " window number as a parameter to the function generating the statusline.
+    " Since the window number isn't static, this means whenever the user
+    " messes with the window layout, we need to make sure each window still
+    " has the correct window number in its statusline; this is the autocmd
+    " below. (This also ensures that any new windows have their statuslines
+    " set to use tbufferline.)
+    "
+    " Double-unfortunately, I can't find an autocmd to cover the case where
+    " the user swaps two windows. The current way around this is to also
+    " update the window numbers every time the statusline gets displayed. (See
+    " the call to tbufferline#UpdateStatuslineOptions() in
+    " tbufferline#StatusLineContent().
+    "
     " TODO: Why do we need BufWinEnter?
     "       It seems to be behaving like a buffer-local variable.
     autocmd WinEnter,VimEnter,BufWinEnter *
-        \ call setwinvar(winnr(), '&statusline',
-        \     tbufferline#StatusLine(winnr()))
+        \ call tbufferline#UpdateStatuslineOptions()
   augroup END
-  for i in range(1, winnr('$'))
-    call setwinvar(i, '&statusline', tbufferline#StatusLine(i))
-  endfor
+  call tbufferline#UpdateStatuslineOptions()
   let s:tbufferline_enabled = 1
 endfunction
 
