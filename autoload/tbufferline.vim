@@ -1,95 +1,88 @@
 " Get the data necessary for the statusline below a:window
-function! s:GetBufferData(window) abort
+function! s:GetBufferData() abort
   let shell_buffers = []
   let file_buffers = []
 
-  let i = 1
-  let last_buffer = bufnr('$')
-  while i <= last_buffer
+  for i in range(1, bufnr('$'))
     if bufexists(i) && buflisted(i)
       let modified = getbufvar(i, '&mod')
 
       let pid = getbufvar(i, 'terminal_job_pid', 'NOPID')
 
       " WHY, VIM. WHY
-      if pid !=# 'NOPID'
-        let cwd = system(["realpath",  "/proc/" . pid . "/cwd"])[0:-2]
-        call add(shell_buffers, [i, cwd])
-      else
+      if pid ==# 'NOPID'
         let fname = bufname(i)
         call add(file_buffers, [i, modified, fname])
+      else
+        let cwd = system(["realpath",  "/proc/" . pid . "/cwd"])[0:-2]
+        call add(shell_buffers, [i, cwd])
       endif
     endif
-    let i += 1
-  endwhile
-  let alternate_buffer = a:window ==# winnr() ? bufnr('#')
-      \ : getwinvar(a:window, 'alternate_buffer', -1)
-  let current_buffer = winbufnr(a:window)
-  return [shell_buffers, file_buffers, current_buffer, alternate_buffer]
-endfunction
-
-" Make a statusline entry for a shell buffer
-function! s:MakeShellName(index, shell_data, current_buffer, alternate_buffer)
-    \ abort
-  let [bufnum, cwd] = a:shell_data
-  let line = a:index . ':' . (cwd ==# $HOME ? '~' : fnamemodify(cwd, ':t'))
-  if bufnum ==# a:current_buffer
-    let line = '%#StatusLine#[' . line . ']%#StatusLineNC#'
-  elseif bufnum ==# a:alternate_buffer
-    return '(' . line . ')'
-  endif
-  return line
+  endfor
+  return [file_buffers, shell_buffers]
 endfunction
 
 " Make a statusline entry for a file buffer
-function! s:MakeFileName(index, file_data, current_buffer, alternate_buffer)
-    \ abort
+function! s:MakeFileName(index, file_data) abort
   let [bufnum, modified, fname] = a:file_data
-  let line = a:index . ':'
-  let line .= substitute(fnamemodify(fname, ':t'), '%', '%%', 'g')
-  let line .= (modified ? '+' : '')
-  if bufnum ==# a:current_buffer
-    let line = '%#StatusLine#[' . line . ']%#StatusLineNC#'
-  elseif bufnum ==# a:alternate_buffer
-    let line = '(' . line . ')'
-  endif
-  return line
+  let name = a:index . ':'
+  let name .= substitute(fnamemodify(fname, ':t'), '%', '%%', 'g')
+  let name .= (modified ? '+' : '')
+  return [bufnum, name]
 endfunction
 
-function! s:MakeStatusLine(shell_buffers, file_buffers, current_buffer,
-    \ alternate_buffer) abort
-  let shell_names = map(a:shell_buffers,
-      \ 's:MakeShellName(v:key+len(a:file_buffers)+1, v:val,'
-      \ . ' a:current_buffer, a:alternate_buffer)')
-  let file_names = map(a:file_buffers,
-      \ 's:MakeFileName(v:key+1, v:val, a:current_buffer, a:alternate_buffer)')
-  return '%#StatusLineNC#' . join(file_names, '  ') . '%='
-      \ . join(shell_names, '  ')
+" Make a statusline entry for a shell buffer
+function! s:MakeShellName(index, shell_data) abort
+  let [bufnum, cwd] = a:shell_data
+  let name = a:index . ':' . (cwd ==# $HOME ? '~' : fnamemodify(cwd, ':t'))
+  return [bufnum, name]
+endfunction
+
+function! s:GetWindowData(window) abort
+  return [winbufnr(a:window), getwinvar(a:window, 'alternate_buffer', -1)]
+endfunction
+
+" Take a statusline entry and add window-specific information to it
+function! s:AddWindowData(buf_and_name, current_buffer, alternate_buffer) abort
+  let [bufnum, name] = a:buf_and_name
+  if bufnum ==# a:current_buffer
+    return '%#StatusLine#[' . name . ']%#StatusLineNC#'
+  elseif bufnum ==# a:alternate_buffer
+    return '(' . name . ')'
+  else
+    return name
+  endif
+endfunction
+
+" Take the generic names and make a window-specific statusline
+" Non-destructive, use of map notwithstanding
+function! s:MakeStatusLine(file_names, shell_names, window)
+  let [current_buffer, alternate_buffer] = s:GetWindowData(a:window)
+  let line = '%#StatusLineNC#'
+  let line .= join(map(copy(a:file_names),
+      \ 's:AddWindowData(v:val, current_buffer, alternate_buffer)'), '  ')
+  let line .= '%='
+  let line .= join(map(copy(a:shell_names),
+      \ 's:AddWindowData(v:val, current_buffer, alternate_buffer)'), '  ')
+  return line
 endfunction
 
 " Make sure all the window numbers are up-to-date; see comments in
 " plugin/tbufferline.vim
-function! tbufferline#UpdateStatuslineOptions() abort
-  for i in range(1, winnr('$'))
-    call setwinvar(i, '&statusline', s:StatusLineOption(i))
+function! tbufferline#Update() abort
+  let [file_buffers, shell_buffers] = s:GetBufferData()
+  let s:bufnummap = map(file_buffers + shell_buffers, 'v:val[0]')
+  let w:alternate_buffer = bufnr('#')
+
+  " map() is destructive; don't rely on file_buffers and shell_buffers anymore
+  let file_names = map(file_buffers, 's:MakeFileName(v:key+1, v:val)')
+  let shell_names = map(shell_buffers,
+      \ 's:MakeShellName(v:key+len(file_buffers)+1, v:val)')
+
+  for window in range(1, winnr('$'))
+    let line = s:MakeStatusLine(file_names, shell_names, window)
+    call setwinvar(window, '&statusline', line)
   endfor
-endfunction
-
-" Return the content to be displayed in the statusline below a:window
-function! tbufferline#StatusLineContent(window) abort
-  call tbufferline#UpdateStatuslineOptions()
-  let [shell_buffers, file_buffers, current_buffer, alternate_buffer]
-      \ = s:GetBufferData(a:window)
-  call setwinvar(a:window, 'alternate_buffer', alternate_buffer)
-  let s:bufnummap
-      \ = map(file_buffers + shell_buffers, 'v:val[0]')
-  return s:MakeStatusLine(shell_buffers, file_buffers, current_buffer,
-      \ alternate_buffer)
-endfunction
-
-" The string to be stored in the statusline option
-function! s:StatusLineOption(window) abort
-  return '%!tbufferline#StatusLineContent(' . a:window . ')'
 endfunction
 
 function! tbufferline#BufNumMap() abort
