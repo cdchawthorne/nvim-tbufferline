@@ -8,6 +8,7 @@ CONTENTS                                                   *tbufferline-contents
          Enabling and disabling............... |tbufferline-enabling-disabling|
          Mappings............................. |tbufferline-mappings|
          Functions............................ |tbufferline-functions|
+         Variables............................ |tbufferline-variables|
     3. License................................ |tbufferline-license|
     4. Credits................................ |tbufferline-credits|
 
@@ -53,14 +54,14 @@ consecutive numbering on the statusline. They can be used as follows:
 Available mappings are:
 
   -----------------------------------------------------------------------------
-  <Plug>TbufferlineBuffer         | When preceded by a count, switch to the
+  <Plug>tbufferline#Buffer        | When preceded by a count, switch to the
                                   | corresponding buffer in tbufferline's
                                   | numbering
-  <Plug>TbufferlineSplitBuffer    | Likewise, but open in a split
-  <Plug>TbufferlineVSplitBuffer   | Likewise, but open in a vertical split
-  <Plug>TbufferlineStepForward    | Switch to the buffer following the current
+  <Plug>tbufferline#SplitBuffer   | Likewise, but open in a split
+  <Plug>tbufferline#VSplitBuffer  | Likewise, but open in a vertical split
+  <Plug>tbufferline#StepForward   | Switch to the buffer following the current
                                   | one in tbufferline's numbering
-  <Plug>TbufferlineStepBack       | Likewise, but the preceding buffer
+  <Plug>tbufferline#StepBack      | Likewise, but the preceding buffer
 
 -------------------------------------------------------------------------------
 Functions                                                 *tbufferline-functions*
@@ -69,6 +70,18 @@ tbufferline#BufNumMap()~
   Returns a list whose ith entry is the buffer number (using vim's buffer
   numbering) of the (i+1)th buffer displayed in the current statusline. This
   can be used to implement things like the <Plug> mappings above.
+
+-------------------------------------------------------------------------------
+Variables                                                 *tbufferline-variables*
+
+tbufferline exposes the following variable partialy because it's potentially
+useful and partially because the author couldn't figure out how to avoid
+exposing a window-local variable.
+
+w:tbufferline_alternate_buffer~
+  The output of evaluating bufnr('#') in this window. Useful in that it can be
+  accessed from other windows via getwinvar() whereas bufnr('#') cannot (at
+  least as far as the author could tell).
 
 ===============================================================================
 3. License                                                  *tbufferline-license*

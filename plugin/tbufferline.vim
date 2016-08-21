@@ -57,19 +57,18 @@ function! s:SwitchBuffer(buffer_command) abort
 endfunction
 
 function! s:StepBuffer(multiplier) abort
-  let steps = (v:count ? v:count : 1) * a:multiplier
-  let idx = (index(tbufferline#BufNumMap(), bufnr('%')) + steps)
+  let l:steps = (v:count ? v:count : 1) * a:multiplier
+  let l:idx = (index(tbufferline#BufNumMap(), bufnr('%')) + l:steps)
   execute 'buffer '
-      \ . tbufferline#BufNumMap()[idx % len(tbufferline#BufNumMap())]
+      \ . tbufferline#BufNumMap()[l:idx % len(tbufferline#BufNumMap())]
 endfunction
 
-nnoremap <silent> <Plug>TbufferlineBuffer
+nnoremap <silent> <Plug>tbufferline#Buffer
     \ :<C-u>call <SID>SwitchBuffer('buffer')<CR>
-nnoremap <silent> <Plug>TbufferlineSplitBuffer
+nnoremap <silent> <Plug>tbufferline#SplitBuffer
     \ :<C-u>call <SID>SwitchBuffer('sbuffer')<CR>
-nnoremap <silent> <Plug>TbufferlineVSplitBuffer
+nnoremap <silent> <Plug>tbufferline#VSplitBuffer
     \ :<C-u>call <SID>SwitchBuffer('vertical sbuffer')<CR>
-nnoremap <silent> <Plug>TbufferlineStepForward
+nnoremap <silent> <Plug>tbufferline#StepForward
     \ :<C-u>call <SID>StepBuffer(1)<CR>
-nnoremap <silent> <Plug>TbufferlineStepBack
-    \ :<C-u>call <SID>StepBuffer(-1)<CR>
+nnoremap <silent> <Plug>tbufferline#StepBack :<C-u>call <SID>StepBuffer(-1)<CR>
