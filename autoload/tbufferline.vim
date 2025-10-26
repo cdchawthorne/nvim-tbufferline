@@ -48,7 +48,7 @@ endfunction
 function! s:AddWindowData(buf_and_name, current_buffer, alternate_buffer) abort
   let [l:bufnum, l:name] = a:buf_and_name
   if l:bufnum ==# a:current_buffer
-    return '%#StatusLine#[' . l:name . ']%#StatusLineNC#'
+    return '%#Tbufferline#[' . l:name . ']%#TbufferlineNC#'
   elseif l:bufnum ==# a:alternate_buffer
     return '(' . l:name . ')'
   else
@@ -60,7 +60,7 @@ endfunction
 " Non-destructive, use of map notwithstanding
 function! s:MakeStatusLine(file_names, shell_names, window)
   let [l:current_buffer, l:alternate_buffer] = s:GetWindowData(a:window)
-  let l:line = '%#StatusLineNC#'
+  let l:line = '%#TbufferlineNC#'
   let l:line .= join(map(copy(a:file_names),
       \ 's:AddWindowData(v:val, l:current_buffer, l:alternate_buffer)'), '  ')
   let l:line .= '%='

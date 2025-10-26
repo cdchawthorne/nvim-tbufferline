@@ -22,7 +22,7 @@ Displayed buffers are prefixed with consecutively increasing numbers that can
 be used to target them using the <Plug> mappings; see |tbufferline-mappings|.
 
 Right now the only way to customize the statusline at all is by changing the
-highlight groups StatusLine (for the current buffer) and StatusLineNC (for
+highlight groups Tbufferline (for the current buffer) and TbufferlineNC (for
 everything else).
 
 ===============================================================================
